@@ -1,13 +1,9 @@
-
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
-import express from "express";
-import cors from "cors";
-import mongoose from "mongoose";
 
-import tasksRouter from "./routes/tasks.js";
-
-dotenv.config();
 
 const app = express();
 
