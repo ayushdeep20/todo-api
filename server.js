@@ -1,52 +1,40 @@
 import express from "express";
-import mongoose from "mongoose";
 import cors from "cors";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import tasksRouter from "./routes/tasks.js";
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Allow your dev & deployed frontend to talk to backend
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://todo-ios-rosy.vercel.app" // your deployed frontend
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
 app.use(express.json());
 
-// CONNECT TO MONGODB USING ENV VARIABLE (we'll set this up soon)
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 5000
+})
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ MongoDB Connection Error:", err.message));
+  .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
-// Task schema
-const TaskSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  date: String,
-  time: String,
-  priority: String,
-  status: String,
+// Test Route
+app.get("/", (req, res) => {
+  res.send("🚀 Todo API is running successfully.");
 });
 
-const Task = mongoose.model("Task", TaskSchema);
+// Task routes
+app.use("/tasks", tasksRouter);
 
-// Routes
-app.get("/tasks", async (req, res) => {
-  const tasks = await Task.find();
-  res.json(tasks);
-});
-
-app.post("/tasks", async (req, res) => {
-  const task = await Task.create(req.body);
-  res.json(task);
-});
-
-app.put("/tasks/:id", async (req, res) => {
-  const updated = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(updated);
-});
-
-app.delete("/tasks/:id", async (req, res) => {
-  await Task.findByIdAndDelete(req.params.id);
-  res.json({ success: true });
-});
-
-// Start server
-app.listen(5000, () => console.log("🚀 API running at http://localhost:5000"));
+// Start Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🔥 Server running on PORT ${PORT}`));
